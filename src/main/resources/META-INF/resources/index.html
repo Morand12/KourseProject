@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quarkus Cache Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results, #logs {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Quarkus Cache Demo</h1>
+    <p>Click the button to send requests to the server and see the effect of caching.</p>
+    <button onclick="sendRequest()">Send Request</button>
+    <div id="results">
+        <p><strong>Total Requests Sent:</strong> <span id="requestCount">0</span></p>
+        <p><strong>Last Response:</strong> <span id="lastResponse">-</span></p>
+        <p><strong>Last Response Time:</strong> <span id="responseTime">-</span> ms</p>
+    </div>
+    <div id="logs">
+        <p><strong>Server Computations (Logs):</strong></p>
+        <ul id="logList"></ul>
+        <p><strong>Total Computations:</strong> <span id="computationCount">0</span></p>
+    </div>
+</div>
+
+<script>
+    let requestCount = 0;
+
+    async function sendRequest() {
+        // Увеличиваем счетчик отправленных запросов
+        requestCount++;
+        document.getElementById('requestCount').textContent = requestCount;
+
+        // Замеряем время начала запроса
+        const startTime = performance.now();
+
+        // Отправляем запрос к /cache/time
+        const response = await fetch('http://localhost:8080/cache/time');
+        const data = await response.text();
+
+        // Замеряем время ответа
+        const endTime = performance.now();
+        const responseTime = (endTime - startTime).toFixed(2);
+        document.getElementById('responseTime').textContent = responseTime;
+        document.getElementById('lastResponse').textContent = data;
+
+        // Запрашиваем логи с сервера
+        const logsResponse = await fetch('http://localhost:8080/cache/logs');
+        const logs = await logsResponse.json();
+
+        // Обновляем список логов
+        const logList = document.getElementById('logList');
+        logList.innerHTML = '';
+        logs.forEach(log => {
+            const li = document.createElement('li');
+            li.textContent = log;
+            logList.appendChild(li);
+        });
+
+        // Обновляем общее количество вычислений
+        document.getElementById('computationCount').textContent = logs.length;
+    }
+</script>
+</body>
+</html>
